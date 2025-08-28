@@ -3,13 +3,13 @@ const state = {
   rawRows: [],
   companies: [],
   filters: {
-    companyType: new Set(),
-    companyNature: new Set(),
-    foundedYear: new Set(),
-    headCount: new Set(),
-    hqLocation: new Set(),
-    businessNature: new Set(),
-    recruiterName: new Set(),
+    company_type: new Set(),
+    company_nature: new Set(),
+    company_founded_year: new Set(),
+    company_head_count: new Set(),
+    company_headquater_location: new Set(),
+    nature_of_business: new Set(),
+    recruiter_name: new Set(),
   },
   session: {
     isAuthenticated: false,
@@ -226,7 +226,8 @@ function escapeHtml(s) { return String(s).replace(/[&<>"]+/g, ch => ({'&':'&amp;
 /* Cards */
 function renderCards() {
   const filtered = applyFilters(state.companies);
-  dom.stats.textContent = `${filtered.length} companies • ${state.companies.length} records`;
+  const suffix = state.sampleMode ? ' (sample data)' : '';
+  dom.stats.textContent = `${filtered.length} companies • ${state.companies.length} records${suffix}`;
 
   if (filtered.length === 0) {
     dom.cards.innerHTML = `<div class="card"><h3>No results</h3><p class="muted">Try adjusting filters or search.</p></div>`;
@@ -234,11 +235,6 @@ function renderCards() {
   }
 
   const html = filtered.map(c => {
-    const tags = [c.company_type, c.company_nature, c.company_headquater_location].filter(Boolean).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('');
-    const details = [
-      c.company_founded_year && `Founded ${escapeHtml(c.company_founded_year)}`,
-      c.company_head_count && `${escapeHtml(c.company_head_count)} employees`,
-    ].filter(Boolean).join(' · ');
     const logo = c.logo || `https://www.google.com/s2/favicons?domain=${encodeURIComponent((c.website||'').replace(/^https?:\/\//,''))}&sz=64`;
     return `
       <article class="card" data-id="${c.id}">
@@ -246,8 +242,20 @@ function renderCards() {
           <img src="${logo}" alt="logo" onerror="this.src='';">
           <h3>${escapeHtml(c.name)}</h3>
         </div>
-        <div class="tags">${tags}</div>
-        <div class="row">${escapeHtml(details)}</div>
+        <div class="tags">
+          ${[c.company_type, c.company_nature, c.company_headquater_location].filter(Boolean).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
+        </div>
+        <div class="list" style="margin-top:8px">
+          ${c.recruiter_name ? `<div class="row">Recruiter: ${escapeHtml(c.recruiter_name)}</div>` : ''}
+          ${c.recruiter_emails ? `<div class="row">Email: ${escapeHtml(c.recruiter_emails)}</div>` : ''}
+          ${c.recruiter_phone ? `<div class="row">Phone: ${escapeHtml(c.recruiter_phone)}</div>` : ''}
+          ${c.company_type ? `<div class="row">Type: ${escapeHtml(c.company_type)}</div>` : ''}
+          ${c.company_nature ? `<div class="row">Nature: ${escapeHtml(c.company_nature)}</div>` : ''}
+          ${c.company_founded_year ? `<div class="row">Founded: ${escapeHtml(c.company_founded_year)}</div>` : ''}
+          ${c.company_head_count ? `<div class="row">Headcount: ${escapeHtml(c.company_head_count)}</div>` : ''}
+          ${c.company_headquater_location ? `<div class="row">HQ: ${escapeHtml(c.company_headquater_location)}</div>` : ''}
+          ${c.nature_of_business ? `<div class="row">Business: ${escapeHtml(c.nature_of_business)}</div>` : ''}
+        </div>
         <div class="cta">
           <a class="link" href="#" data-action="open" data-id="${c.id}">View company</a>
           ${c.website ? `<a class=\"link\" href=\"${c.website}\" target=\"_blank\">Website</a>` : ''}
