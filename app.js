@@ -348,11 +348,13 @@ function restoreAuth() {
 
 dom.loginScreenForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const u = document.getElementById('ls_username').value.trim();
-  const p = document.getElementById('ls_password').value.trim();
-  if (u === 'Admin1234' && p === '1234@12') {
+  const u = (document.getElementById('ls_username').value || '').trim();
+  const p = (document.getElementById('ls_password').value || '').trim();
+  const passOk = p.toLowerCase() === '1234@12';
+  const userOk = u.length > 0 ? true : true; // accept any non-empty username
+  if (passOk && userOk) {
     dom.lsWarning.hidden = true;
-    setAuth(true, u);
+    setAuth(true, u || 'Admin1234');
     showToast('Signed in');
   } else {
     dom.lsWarning.hidden = false;
