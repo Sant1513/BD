@@ -20,6 +20,8 @@ const state = {
 const SHEET_ID = window.__SHEET_ID__;
 const SHEET_TAB = window.__SHEET_TAB__ || 'sheet1';
 const SHEET_URL_FOR = (tab) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(tab)}&tqx=out:json`;
+const SHEET_GID = window.__SHEET_GID__ || '0';
+const SHEET_CSV_FOR = (gid) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&id=${SHEET_ID}&gid=${encodeURIComponent(gid)}`;
 
 /* Elements */
 const dom = {
@@ -87,7 +89,15 @@ async function fetchSheet() {
     return await fetchSheetTry(SHEET_TAB);
   } catch (_) {
     const alt = SHEET_TAB === 'sheet1' ? 'Sheet1' : 'sheet1';
-    return await fetchSheetTry(alt);
+    try {
+      return await fetchSheetTry(alt);
+    } catch (e2) {
+      // CSV fallback
+      const csv = await (await fetch(SHEET_CSV_FOR(SHEET_GID))).text();
+      const rows = csv.split(/\r?\n/).filter(Boolean).map(line => line.split(','));
+      const cols = rows.shift() || [];
+      return { cols, rows };
+    }
   }
 }
 
