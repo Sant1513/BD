@@ -124,9 +124,9 @@ function buildCompanies(cols, rows) {
     nature_of_business: getIdx(['nature_of_business','business_nature','business'], 14),
   };
 
-  for (const row of rows) {
+  const buildFrom = (row) => {
     const rec = normalizeRecord(cols, row);
-    const companyName = safe(row[idx.company_name] || rec.company_name);
+    const companyName = safe(row[idx.company_name] || rec.company_name || row[1] || row[0]);
     if (!companyName) continue;
 
     const company = {
@@ -148,6 +148,14 @@ function buildCompanies(cols, rows) {
       valuation: '',
     };
     companies.push(company);
+  };
+
+  for (const row of rows) {
+    buildFrom(row);
+  }
+  // If nothing parsed but rows exist, try skipping first row (it may be header)
+  if (companies.length === 0 && rows.length > 1) {
+    for (const row of rows.slice(1)) buildFrom(row);
   }
   return companies;
 }
@@ -203,7 +211,7 @@ function applyFilters(data) {
         if (!selected.has(String(item[key] || ''))) return false;
       }
     }
-    const q = dom.search.value.trim().toLowerCase();
+    const q = (dom.search.value || '').trim().toLowerCase();
     if (q) {
       const hay = [
         item.name,
