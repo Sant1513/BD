@@ -10,7 +10,32 @@
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-    <div id="app">
+    <div id="loginScreen" class="login-screen" hidden>
+        <div class="login-card">
+            <div class="brand">
+                <div class="brand-mark">CD</div>
+                <div class="brand-text">
+                    <h1>Company Dashboard</h1>
+                    <p class="subtitle">Sign in to continue</p>
+                </div>
+            </div>
+            <form id="loginScreenForm" class="login-form">
+                <label class="field">
+                    <span>Username</span>
+                    <input id="ls_username" type="text" placeholder="Admin1234" autocomplete="username">
+                </label>
+                <label class="field">
+                    <span>Password</span>
+                    <input id="ls_password" type="password" placeholder="1234@12" autocomplete="current-password">
+                </label>
+                <button class="btn primary" type="submit">Continue</button>
+                <p class="muted small">Wrong password still allows viewing with a limited session.</p>
+                <p id="ls_warning" class="warning" hidden>Credentials incorrect. Proceeding with limited session.</p>
+            </form>
+        </div>
+    </div>
+
+    <div id="app" hidden>
         <header class="app-header">
             <div class="brand">
                 <div class="brand-mark">CD</div>
@@ -22,7 +47,7 @@
             <div class="header-actions">
                 <input id="searchInput" class="search" type="search" placeholder="Search companies, POCs, email, phone..." aria-label="Search">
                 <button id="resetFiltersBtn" class="btn ghost" title="Reset filters">Reset</button>
-                <button id="loginBtn" class="btn primary">Login</button>
+                <button id="logoutBtn" class="btn ghost" title="Log out">Logout</button>
             </div>
         </header>
 
@@ -36,26 +61,7 @@
         </footer>
     </div>
 
-    <!-- Login Modal -->
-    <dialog id="loginModal" class="modal">
-        <form method="dialog" class="modal-content" id="loginForm">
-            <h2>Sign in</h2>
-            <p class="muted">Use default credentials or continue anyway.</p>
-            <label class="field">
-                <span>Username</span>
-                <input id="username" type="text" placeholder="Admin1234" autocomplete="username">
-            </label>
-            <label class="field">
-                <span>Password</span>
-                <input id="password" type="password" placeholder="1234@12" autocomplete="current-password">
-            </label>
-            <div class="modal-actions">
-                <button value="cancel" class="btn ghost">Cancel</button>
-                <button id="loginSubmit" value="default" class="btn primary">Continue</button>
-            </div>
-            <p id="loginWarning" class="warning" hidden>Credentials incorrect. Proceeding with limited session.</p>
-        </form>
-    </dialog>
+    <!-- Removed old login modal -->
 
     <!-- Company Detail Popup -->
     <dialog id="companyPopup" class="modal">

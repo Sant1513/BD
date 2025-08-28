@@ -36,6 +36,16 @@ body {
   backdrop-filter: blur(6px);
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
+
+/* Full-screen login */
+.login-screen { position: fixed; inset: 0; display: grid; place-items: center; background:
+  radial-gradient(1200px 800px at 10% -10%, #18243e 0%, rgba(0,0,0,0) 60%),
+  radial-gradient(1000px 600px at 110% 10%, #1d2a49 0%, rgba(0,0,0,0) 60%), var(--bg); }
+.login-card { width: min(520px, 92vw); background: linear-gradient(180deg, var(--panel), var(--panel-2)); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); animation: floatIn .4s ease both; }
+.login-form { margin-top: 10px; display: grid; gap: 10px; }
+.small { font-size: 12px; }
+
+@keyframes floatIn { from { opacity: 0; transform: translateY(8px) scale(.98);} to { opacity: 1; transform: translateY(0) scale(1);} }
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand-mark {
   width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center;

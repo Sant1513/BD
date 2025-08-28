@@ -23,13 +23,16 @@ const SHEET_URL_FOR = (tab) => `https://docs.google.com/spreadsheets/d/${SHEET_I
 
 /* Elements */
 const dom = {
+  loginScreen: document.getElementById('loginScreen'),
+  loginScreenForm: document.getElementById('loginScreenForm'),
+  lsWarning: document.getElementById('ls_warning'),
   filters: document.getElementById('filters'),
   cards: document.getElementById('cards'),
   stats: document.getElementById('stats'),
   googleLink: document.getElementById('googleLink'),
   search: document.getElementById('searchInput'),
   resetFiltersBtn: document.getElementById('resetFiltersBtn'),
-  loginBtn: document.getElementById('loginBtn'),
+  logoutBtn: document.getElementById('logoutBtn'),
   loginModal: document.getElementById('loginModal'),
   loginForm: document.getElementById('loginForm'),
   loginWarning: document.getElementById('loginWarning'),
@@ -301,24 +304,51 @@ function openCompanyPopup(c) {
 
 dom.popupClose.addEventListener('click', () => dom.popup.close());
 
-/* Login */
-dom.loginBtn.addEventListener('click', () => dom.loginModal.showModal());
-dom.loginForm.addEventListener('submit', (e) => {
+/* Login (full screen) */
+function setAuth(isAuthed, username) {
+  state.session.isAuthenticated = !!isAuthed;
+  state.session.username = username || null;
+  localStorage.setItem('cd_auth', JSON.stringify(state.session));
+  if (state.session.isAuthenticated) {
+    dom.loginScreen.hidden = true;
+    document.getElementById('app').hidden = false;
+  } else {
+    dom.loginScreen.hidden = false;
+    document.getElementById('app').hidden = true;
+  }
+}
+
+function restoreAuth() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('cd_auth') || 'null');
+    if (saved && typeof saved === 'object') {
+      state.session = { ...state.session, ...saved };
+    }
+  } catch(_) {}
+  setAuth(state.session.isAuthenticated, state.session.username);
+}
+
+dom.loginScreenForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const u = document.getElementById('username').value.trim();
-  const p = document.getElementById('password').value.trim();
+  const u = document.getElementById('ls_username').value.trim();
+  const p = document.getElementById('ls_password').value.trim();
   if (u === 'Admin1234' && p === '1234@12') {
-    state.session.isAuthenticated = true;
-    state.session.username = u;
-    dom.loginWarning.hidden = true;
-    dom.loginModal.close();
+    dom.lsWarning.hidden = true;
+    setAuth(true, u);
     showToast('Signed in');
   } else {
-    state.session.isAuthenticated = false; // soft-fail, still allow
-    dom.loginWarning.hidden = false;
-    dom.loginModal.close();
+    dom.lsWarning.hidden = false;
+    setAuth(false, null); // limited session: show login but allow view via bypass
+    // proceed to view anyway
+    dom.loginScreen.hidden = true;
+    document.getElementById('app').hidden = false;
     showToast('Continuing without auth');
   }
+});
+
+dom.logoutBtn.addEventListener('click', () => {
+  localStorage.removeItem('cd_auth');
+  setAuth(false, null);
 });
 
 /* Enrichment (best-effort using public endpoints) */
@@ -345,6 +375,7 @@ async function enrichCompanies(companies) {
 /* Init */
 async function init() {
   try {
+    restoreAuth();
     const { cols, rows } = await fetchSheet();
     state.rawRows = rows;
     state.companies = buildCompanies(cols, rows);
