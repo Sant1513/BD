@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Company Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-mark">CD</div>
+                <div class="brand-text">
+                    <h1>Company Dashboard</h1>
+                    <p class="subtitle">Live view from Google Sheet</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <input id="searchInput" class="search" type="search" placeholder="Search companies, POCs, email, phone..." aria-label="Search">
+                <button id="resetFiltersBtn" class="btn ghost" title="Reset filters">Reset</button>
+                <button id="loginBtn" class="btn primary">Login</button>
+            </div>
+        </header>
+
+        <section id="filters" class="filters"></section>
+
+        <main id="cards" class="cards" aria-live="polite"></main>
+
+        <footer class="app-footer">
+            <span id="stats">0 companies • 0 records</span>
+            <a id="googleLink" href="#" target="_blank" rel="noopener">Open Sheet</a>
+        </footer>
+    </div>
+
+    <!-- Login Modal -->
+    <dialog id="loginModal" class="modal">
+        <form method="dialog" class="modal-content" id="loginForm">
+            <h2>Sign in</h2>
+            <p class="muted">Use default credentials or continue anyway.</p>
+            <label class="field">
+                <span>Username</span>
+                <input id="username" type="text" placeholder="Admin1234" autocomplete="username">
+            </label>
+            <label class="field">
+                <span>Password</span>
+                <input id="password" type="password" placeholder="1234@12" autocomplete="current-password">
+            </label>
+            <div class="modal-actions">
+                <button value="cancel" class="btn ghost">Cancel</button>
+                <button id="loginSubmit" value="default" class="btn primary">Continue</button>
+            </div>
+            <p id="loginWarning" class="warning" hidden>Credentials incorrect. Proceeding with limited session.</p>
+        </form>
+    </dialog>
+
+    <!-- Company Detail Popup -->
+    <dialog id="companyPopup" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="company-identity">
+                    <img id="popupLogo" class="logo" alt="Company logo" />
+                    <div>
+                        <h3 id="popupTitle"></h3>
+                        <div class="meta" id="popupMeta"></div>
+                    </div>
+                </div>
+                <button id="popupClose" class="icon-btn" aria-label="Close">✕</button>
+            </div>
+
+            <div class="popup-grid">
+                <section>
+                    <h4>POCs</h4>
+                    <div id="popupPocs" class="list"></div>
+                </section>
+                <section>
+                    <h4>Contacts</h4>
+                    <div id="popupContacts" class="list"></div>
+                </section>
+            </div>
+
+            <div class="external">
+                <a id="popupWebsite" href="#" target="_blank" rel="noopener">Website</a>
+                <a id="popupGoogle" href="#" target="_blank" rel="noopener">Google</a>
+                <a id="popupLinkedIn" href="#" target="_blank" rel="noopener">LinkedIn</a>
+            </div>
+        </div>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script>
+      window.__SHEET_ID__ = '1FuXu4BgjQse9Bgeg-u0EvwGsTbFmm6JRY4J36CI36OU';
+      window.__SHEET_TAB__ = 'Sheet1';
+    </script>
+    <script src="./app.js"></script>
+</body>
+<script>
+  document.documentElement.style.scrollBehavior = 'smooth';
+</script>
+</html>
+
+
