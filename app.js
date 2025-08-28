@@ -113,6 +113,7 @@ function buildCompanies(cols, rows) {
 
   const idx = {
     company_name: getIdx(['company_name','company','name'], 1),
+    company_url: getIdx(['company_url','website','url','homepage'], 2),
     recruiter_name: getIdx(['recruiter_name','recruiter'], 6),
     recruiter_emails: getIdx(['recruiter_emails','recruiter_email','email','emails'], 7),
     recruiter_phone: getIdx(['recruiter_phone','phone','mobile'], 8),
@@ -141,7 +142,7 @@ function buildCompanies(cols, rows) {
       company_head_count: safe(row[idx.company_head_count] || rec.company_head_count),
       company_headquater_location: safe(row[idx.company_headquater_location] || rec.company_headquater_location),
       nature_of_business: safe(row[idx.nature_of_business] || rec.nature_of_business),
-      website: '',
+      website: safe(row[idx.company_url] || rec.company_url),
       logo: '',
       headquarters: '',
       employees: '',
@@ -215,6 +216,7 @@ function applyFilters(data) {
     if (q) {
       const hay = [
         item.name,
+        item.company_url,
         item.recruiter_name,
         item.recruiter_emails,
         item.recruiter_phone,
@@ -222,7 +224,7 @@ function applyFilters(data) {
         item.company_nature,
         item.company_headquater_location,
         item.nature_of_business
-      ].join(' ').toLowerCase();
+      ].filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
