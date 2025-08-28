@@ -18,7 +18,7 @@ const state = {
 };
 
 const SHEET_ID = window.__SHEET_ID__;
-const SHEET_TAB = window.__SHEET_TAB__ || 'Sheet1';
+const SHEET_TAB = window.__SHEET_TAB__ || 'sheet1';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_TAB)}&tqx=out:json`;
 
 /* Elements */
@@ -74,7 +74,7 @@ async function fetchSheet() {
   const text = await res.text();
   const json = JSON.parse(text.replace(/^.*?\(/, '').replace(/\);?\s*$/, ''));
   const cols = json.table.cols.map(c => c.label || c.id);
-  const rows = json.table.rows.map(r => r.c.map(c => (c ? c.v : '')));
+  const rows = json.table.rows.map(r => r.c.map(c => (c ? (c.f ?? c.v) : '')));
   return { cols, rows };
 }
 
@@ -97,15 +97,16 @@ function buildCompanies(cols, rows) {
     const company = {
       id: `${companyName}-${companies.length}`,
       name: companyName,
-      recruiter_name: safe(row[6-1] || rec.recruiter_name),
-      recruiter_emails: safe(row[7-1] || rec.recruiter_emails),
-      recruiter_phone: safe(row[8-1] || rec.recruiter_phone),
-      company_type: safe(row[9-1] || rec.company_type),
-      company_nature: safe(row[10-1] || rec.company_nature),
-      company_founded_year: safe(row[11-1] || rec.company_founded_year),
-      company_head_count: safe(row[12-1] || rec.company_head_count),
-      company_headquater_location: safe(row[13-1] || rec.company_headquater_location),
-      nature_of_business: safe(row[14-1] || rec.nature_of_business),
+      // Columns: G..O -> indexes 6..14 (0-based)
+      recruiter_name: safe(row[6] || rec.recruiter_name),
+      recruiter_emails: safe(row[7] || rec.recruiter_emails),
+      recruiter_phone: safe(row[8] || rec.recruiter_phone),
+      company_type: safe(row[9] || rec.company_type),
+      company_nature: safe(row[10] || rec.company_nature),
+      company_founded_year: safe(row[11] || rec.company_founded_year),
+      company_head_count: safe(row[12] || rec.company_head_count),
+      company_headquater_location: safe(row[13] || rec.company_headquater_location),
+      nature_of_business: safe(row[14] || rec.nature_of_business),
       // enrichment placeholders
       website: '',
       logo: '',
