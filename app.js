@@ -19,7 +19,7 @@ const state = {
 
 const SHEET_ID = window.__SHEET_ID__;
 const SHEET_TAB = window.__SHEET_TAB__ || 'sheet1';
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_TAB)}&tqx=out:json`;
+const SHEET_URL_FOR = (tab) => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(tab)}&tqx=out:json`;
 
 /* Elements */
 const dom = {
@@ -69,13 +69,23 @@ const copyText = async (text) => {
 const uniqueSorted = (arr) => Array.from(new Set(arr.filter(Boolean))).sort((a,b) => String(a).localeCompare(String(b)));
 
 /* Fetch & Parse Google Sheet (GViz JSON) */
-async function fetchSheet() {
-  const res = await fetch(SHEET_URL);
+async function fetchSheetTry(tabName) {
+  const res = await fetch(SHEET_URL_FOR(tabName));
+  if (!res.ok) throw new Error(`Sheet fetch failed: ${res.status}`);
   const text = await res.text();
   const json = JSON.parse(text.replace(/^.*?\(/, '').replace(/\);?\s*$/, ''));
-  const cols = json.table.cols.map(c => c.label || c.id);
+  const cols = json.table.cols.map(c => (c.label || c.id || '').toString());
   const rows = json.table.rows.map(r => r.c.map(c => (c ? (c.f ?? c.v) : '')));
   return { cols, rows };
+}
+
+async function fetchSheet() {
+  try {
+    return await fetchSheetTry(SHEET_TAB);
+  } catch (_) {
+    const alt = SHEET_TAB === 'sheet1' ? 'Sheet1' : 'sheet1';
+    return await fetchSheetTry(alt);
+  }
 }
 
 function normalizeRecord(cols, row) {
@@ -88,26 +98,46 @@ function normalizeRecord(cols, row) {
 function buildCompanies(cols, rows) {
   const companies = [];
   const safe = (v) => (v == null ? '' : String(v).trim());
+  const norm = (s) => safe(s).toLowerCase().replace(/[^a-z0-9]+/g,'_');
+  const headerIndex = new Map(cols.map((c,i)=>[norm(c), i]));
+
+  const getIdx = (candidates, fallbackIdx) => {
+    for (const key of candidates) {
+      if (headerIndex.has(key)) return headerIndex.get(key);
+    }
+    return fallbackIdx;
+  };
+
+  const idx = {
+    company_name: getIdx(['company_name','company','name'], 1),
+    recruiter_name: getIdx(['recruiter_name','recruiter'], 6),
+    recruiter_emails: getIdx(['recruiter_emails','recruiter_email','email','emails'], 7),
+    recruiter_phone: getIdx(['recruiter_phone','phone','mobile'], 8),
+    company_type: getIdx(['company_type','type'], 9),
+    company_nature: getIdx(['company_nature','nature'], 10),
+    company_founded_year: getIdx(['company_founded_year','founded','founded_year','founded_yr'], 11),
+    company_head_count: getIdx(['company_head_count','headcount','employees'], 12),
+    company_headquater_location: getIdx(['company_headquater_location','company_headquarter_location','headquarters','hq','location'], 13),
+    nature_of_business: getIdx(['nature_of_business','business_nature','business'], 14),
+  };
+
   for (const row of rows) {
     const rec = normalizeRecord(cols, row);
-    // Expected: company_name in Col B, recruiters + details G..O
-    const companyName = safe(row[1] || rec.company_name);
+    const companyName = safe(row[idx.company_name] || rec.company_name);
     if (!companyName) continue;
 
     const company = {
       id: `${companyName}-${companies.length}`,
       name: companyName,
-      // Columns: G..O -> indexes 6..14 (0-based)
-      recruiter_name: safe(row[6] || rec.recruiter_name),
-      recruiter_emails: safe(row[7] || rec.recruiter_emails),
-      recruiter_phone: safe(row[8] || rec.recruiter_phone),
-      company_type: safe(row[9] || rec.company_type),
-      company_nature: safe(row[10] || rec.company_nature),
-      company_founded_year: safe(row[11] || rec.company_founded_year),
-      company_head_count: safe(row[12] || rec.company_head_count),
-      company_headquater_location: safe(row[13] || rec.company_headquater_location),
-      nature_of_business: safe(row[14] || rec.nature_of_business),
-      // enrichment placeholders
+      recruiter_name: safe(row[idx.recruiter_name] || rec.recruiter_name),
+      recruiter_emails: safe(row[idx.recruiter_emails] || rec.recruiter_emails),
+      recruiter_phone: safe(row[idx.recruiter_phone] || rec.recruiter_phone),
+      company_type: safe(row[idx.company_type] || rec.company_type),
+      company_nature: safe(row[idx.company_nature] || rec.company_nature),
+      company_founded_year: safe(row[idx.company_founded_year] || rec.company_founded_year),
+      company_head_count: safe(row[idx.company_head_count] || rec.company_head_count),
+      company_headquater_location: safe(row[idx.company_headquater_location] || rec.company_headquater_location),
+      nature_of_business: safe(row[idx.nature_of_business] || rec.nature_of_business),
       website: '',
       logo: '',
       headquarters: '',
@@ -318,6 +348,43 @@ async function init() {
     const { cols, rows } = await fetchSheet();
     state.rawRows = rows;
     state.companies = buildCompanies(cols, rows);
+    if (!state.companies || state.companies.length === 0) {
+      state.sampleMode = true;
+      state.companies = [
+        {
+          id: 'Acme-0',
+          name: 'Acme Corp',
+          recruiter_name: 'Jane Doe',
+          recruiter_emails: 'jane@example.com',
+          recruiter_phone: '+1 555-0100',
+          company_type: 'Product',
+          company_nature: 'SaaS',
+          company_founded_year: '2015',
+          company_head_count: '120',
+          company_headquater_location: 'San Francisco, USA',
+          nature_of_business: 'Sales CRM',
+          website: 'https://acme.com',
+          logo: 'https://www.google.com/s2/favicons?domain=acme.com&sz=64'
+        },
+        {
+          id: 'Globex-1',
+          name: 'Globex',
+          recruiter_name: 'John Smith',
+          recruiter_emails: 'john@globex.io',
+          recruiter_phone: '+44 20 7946 0958',
+          company_type: 'Services',
+          company_nature: 'Consulting',
+          company_founded_year: '2009',
+          company_head_count: '550',
+          company_headquater_location: 'London, UK',
+          nature_of_business: 'Digital transformation',
+          website: 'https://globex.io',
+          logo: 'https://www.google.com/s2/favicons?domain=globex.io&sz=64'
+        }
+      ];
+    } else {
+      state.sampleMode = false;
+    }
     await enrichCompanies(state.companies);
     renderFilters();
     renderCards();
